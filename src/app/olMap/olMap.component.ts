@@ -2,14 +2,12 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 
 // OpenLayers
-import { Image as ImageLayer} from "ol/layer.js";
 import Map from "ol/Map.js";
-import View from "ol/View.js";
 import Projection from "ol/proj/Projection.js";
-import { Extent, getCenter, getTopLeft } from "ol/extent.js";
-//import {defaults as defaultInteractions} from 'ol/interaction.js';
-import * as easing from "ol/easing.js";
-import * as ImageStatic from "ol/source/ImageStatic";
+import View from "ol/View.js";
+import { easeOut } from "ol/easing.js";
+import { Extent, getCenter } from "ol/extent.js";
+import { Image as ImageLayer } from "ol/layer.js";
 import { ImageCanvas } from "ol/source.js";
 
 class EventEmitter {
@@ -62,13 +60,13 @@ export class OlMapComponent implements OnInit {
   context: CanvasRenderingContext2D = this.canvas.getContext("2d");
   hostElement: ElementRef;
   isPlaying: boolean = false;
-  video: VideoElement = new VideoElement("https://www.w3schools.com/html/mov_bbb.mp4")
-  //("https://download.blender.org/peach/bigbuckbunny_movies/BigBuckBunny_640x360.m4v");
+  isReady: boolean = false;
   imageCanvas: ImageCanvas;
-  projection: Projection;
   map: Map;
   playbackInterval: any;
-
+  video: VideoElement = new VideoElement("https://www.w3schools.com/html/mov_bbb.mp4");
+  //video: VideoElement = new VideoElement("https://download.blender.org/peach/bigbuckbunny_movies/BigBuckBunny_640x360.m4v");
+  
   constructor(private host: ElementRef) { 
     this.hostElement = host;
     this.video.element.loop = true;
@@ -76,9 +74,9 @@ export class OlMapComponent implements OnInit {
 
   ngOnInit() {
     this.video.once("canplay", () => {
-      console.log("ready");
-      var extent = [0, 0, this.video.width, this.video.height];
-      let projection = new Projection({
+      this.isReady = true;
+      const extent = [0, 0, this.video.width, this.video.height];
+      const projection = new Projection({
         code: "video",
         units: "pixels",
         extent: extent
@@ -98,27 +96,24 @@ export class OlMapComponent implements OnInit {
           const scaleFactor = pixelRatio / resolution;
           this.context.scale(scaleFactor, scaleFactor);
           this.context.translate(-extent[0], extent[3] - this.video.height);
-          this.context.fillStyle = "#FF0000";
           this.context.drawImage(this.video.element, 0, 0);
           return this.canvas;
         },
       });
-      var imageLayer = new ImageLayer({ source: this.imageCanvas })
+      var imageLayer = new ImageLayer({ source: this.imageCanvas, updateWhileAnimating: true })
       let view = new View({
-        center: getCenter(extent),
         extent: extent,
-        projection: this.projection,
+        projection: projection,
         resolution: 1,
         minResolution: 0.1,
         maxResolution: 10
       });
       this.map = new Map({
-        layers: [
-          imageLayer
-        ],
+        layers: [ imageLayer ],
         target: this.hostElement.nativeElement.firstElementChild,
         view: view
       });
+      this.map.on("click", () => this.togglePlayback());
       this.zoomBestFit();
     });
   }
@@ -126,7 +121,8 @@ export class OlMapComponent implements OnInit {
   renderVideo() {
     this.imageCanvas.refresh();
     if (this.isPlaying) {
-      setTimeout(() => this.renderVideo(), 1000 / 60);
+      requestAnimationFrame(()=>this.renderVideo());
+      //setTimeout(() => this.renderVideo(), 1000 / 60);
     }
   }
 
@@ -169,7 +165,7 @@ export class OlMapComponent implements OnInit {
       view.animate({
         resolution: newResolution,
         duration: 250,
-        easing: easing.easeOut
+        easing: easeOut
       });
     }
   }

@@ -1,10 +1,12 @@
 <div class="ol-map"></div>
-<div class="controls">
-  <button mat-raised-button color="primary" (click)="togglePlayback()">{{ isPlaying ? "Pause" : "Play" }}</button>
-</div>
-<div class="map-controls">
-  <button mat-raised-button color="default" (click)="resetView()">Reset View</button>
-  <button mat-raised-button color="default" (click)="zoomBestFit()">Zoom Best Fit</button>
-  <button mat-raised-button color="default" (click)="zoomFull()">Zoom Full</button>
-  <button mat-raised-button color="default" (click)="zoomIn()">Zoom In</button>
+<div *ngIf="isReady">
+  <div class="controls">
+    <button mat-raised-button color="primary" (click)="togglePlayback()">{{ isPlaying ? "Pause" : "Play" }}</button>
+  </div>
+  <div class="map-controls">
+    <button mat-raised-button color="default" (click)="resetView()">Reset View</button>
+    <button mat-raised-button color="default" (click)="zoomBestFit()">Zoom Best Fit</button>
+    <button mat-raised-button color="default" (click)="zoomFull()">Zoom Full</button>
+    <button mat-raised-button color="default" (click)="zoomIn()">Zoom In</button>
+  </div>
 </div>
